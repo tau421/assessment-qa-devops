@@ -6,10 +6,23 @@ const {shuffleArray} = require('./utils')
 
 app.use(express.json());
 
+// include and initialize the rollbar library with your access token
+var Rollbar = require('rollbar')
+var rollbar = new Rollbar({
+  accessToken: 'd91f749a2f384348a5c269feac25fb05',
+  captureUncaught: true,
+  captureUnhandledRejections: true,
+})
+
+// record a generic message and send it to Rollbar
+rollbar.log('Hello world!')
+
 app.get("/", function(req, res) {
+    rollbar.info('HTML served successfully');
    res.sendFile(path.join(__dirname, "public/index.html")); 
 })
 app.get("/styles", function(req, res){
+    rollbar.info('CSS styles applied');
     res.sendFile(path.join(__dirname, "public/index.css"));
 })
 app.get("/js", function(req, res) {
@@ -57,9 +70,11 @@ app.post('/api/duel', (req, res) => {
         // comparing the total health to determine a winner
         if (compHealthAfterAttack > playerHealthAfterAttack) {
             playerRecord.losses++
+            rollbar.log('duel lost successfully');
             res.status(200).send('You lost!')
         } else {
             playerRecord.losses++
+            rollbar.log('duel won successfully')
             res.status(200).send('You won!')
         }
     } catch (error) {
@@ -76,6 +91,8 @@ app.get('/api/player', (req, res) => {
         res.sendStatus(400)
     }
 })
+
+app.use(rollbar.errorHandler());
 
 const port = process.env.PORT || 3000
 
